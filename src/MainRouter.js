@@ -4,7 +4,7 @@ import HomePage from "./view/HomePage"
 
 const MainRouter = (props) => {
   return <Routes>
-    <Route path="/home" element={<HomePage />} />
+    <Route path="/" element={<HomePage />} />
   </Routes>
 }
 
