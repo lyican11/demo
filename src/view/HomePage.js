@@ -5,6 +5,7 @@ import { UploadOutlined, LeftOutlined, RightOutlined, VideoCameraOutlined, FileP
 import 'react-pdf/dist/Page/AnnotationLayer.css'
 import 'react-pdf/dist/Page/TextLayer.css'
 import 'antd/dist/reset.css'
+import KnowledgeGraph from '../component/KnowledgeGraph'
 
 pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cat.net/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.mjs`
 
@@ -187,31 +188,6 @@ function HomePage () {
     }
   }
 
-  const renderGraph = () => {
-    if (!graphData) return <Paragraph>No graph data available.</Paragraph>
-    // Render graph data here, e.g., using a library like react-d3-graph
-    return (
-      <Card title="Knowledge Graph" style={{ marginBottom: '15px' }}>
-        <Paragraph>
-          <Text strong>Nodes:</Text>
-        </Paragraph>
-        {graphData.nodes.map(node => (
-          <Paragraph key={node.id}>
-            <Text strong>{node.label}</Text>
-            <br />
-            <Text type="secondary">Type: {node.type}</Text>
-            <br />
-            <Text type="secondary">Connections: {node.connections.join(', ')}</Text>
-            <br />
-            <Text type="secondary">Card: {node.card}</Text>
-            <br />
-            <Text type="secondary">Detail ID: {node["detail-id"]}</Text>
-          </Paragraph>
-        ))}
-      </Card>
-    )
-  }
-
   return (
     <div style={{ padding: '20px', display: 'flex' }}>
       <div style={{ flex: 1, marginRight: '20px' }}>
@@ -309,11 +285,11 @@ function HomePage () {
         )}
         {selectedRightTab === 'graph' && (
           <>
-            <Button onClick={generateGraph} style={{ marginBottom: '20px' }}>
+            <Button onClick={generateGraph} style={{ marginBottom: '5px' }}>
               Generate Knowledge Graph
             </Button>
             <div>
-              {renderGraph()}
+              {graphData ? <KnowledgeGraph graphData={graphData} /> : <Paragraph>No graph data available.</Paragraph>}
             </div>
           </>
         )}
