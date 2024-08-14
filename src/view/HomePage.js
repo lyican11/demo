@@ -1,6 +1,6 @@
-import React, { useState } from 'react'
+import React, { useState, useRef } from 'react'
 import { Document, Page, pdfjs } from 'react-pdf'
-import { Upload, Button, Pagination, message, Card, Typography, Tabs } from 'antd'
+import { Upload, Button, Pagination, message, Card, Typography, Tabs, Slider, Modal, Row, Col } from 'antd'
 import { UploadOutlined, LeftOutlined, RightOutlined, VideoCameraOutlined, FilePdfOutlined, AppstoreAddOutlined } from '@ant-design/icons'
 import 'react-pdf/dist/Page/AnnotationLayer.css'
 import 'react-pdf/dist/Page/TextLayer.css'
@@ -12,6 +12,72 @@ pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cat.net/ajax/libs/pdf.js/${pdfjs.
 const { Text, Paragraph } = Typography
 const { TabPane } = Tabs
 
+const GraphData = {
+  document_id: "f2405076-35b5-4ef2-bca2-c5627a5c8d10",
+  status: 200,
+  type: "graph",
+  message: "success",
+  payload: {
+    nodes: [
+      {
+        id: "0",
+        label: "丁奎岭",
+        type: "person",
+        connections: ["1", "2"],
+        card: "message from dingkui",
+        detailId: "80313741-3307-4123-ba9c-07897fd7e5fc"
+      },
+      {
+        id: "1",
+        label: "Node 1",
+        type: "person",
+        connections: ["0"],
+        card: "Detail about Node 1",
+        detailId: "node-1-detail-id"
+      },
+      {
+        id: "2",
+        label: "Node 2",
+        type: "person",
+        connections: ["0"],
+        card: "Detail about Node 2",
+        detailId: "node-2-detail-id"
+      }
+    ]
+  }
+}
+
+const QuestionData = {
+  document_id: "f2405076-35b5-4ef2-bca2-c5627a5c8d10",
+  status: 200,
+  type: "exercise",
+  message: "success",
+  payload: [
+    {
+      type: "single-choice",
+      question: "丁奎岭是谁？",
+      options: ["一个演员", "一个演员", "一个演员", "一个演员"],
+      answer: "a"
+    },
+    {
+      type: "multiple-choice",
+      question: "丁奎岭是谁？",
+      options: ["一个演员", "一个演员", "一个演员", "一个演员"],
+      answer: "abcd"
+    },
+    {
+      type: "fill-blank",
+      question: ["丁奎岭是", "。"],
+      answer: ["一个演员"]
+    },
+    {
+      type: "long-answer",
+      question: "丁奎岭是谁？",
+      answer: "一个演员"
+    }
+  ]
+}
+
 function HomePage () {
   const [numPages, setNumPages] = useState(null)
   const [pageNumber, setPageNumber] = useState(1)
@@ -20,6 +86,10 @@ function HomePage () {
   const [graphData, setGraphData] = useState(null)
   const [selectedLeftTab, setSelectedLeftTab] = useState('pdf')
   const [selectedRightTab, setSelectedRightTab] = useState('questions')
+  const [videoDuration, setVideoDuration] = useState(0)
+  const [isModalVisible, setIsModalVisible] = useState(false)
+  const [range, setRange] = useState([0, 0])
+  const videoRef = useRef(null)
 
   function onDocumentLoadSuccess ({ numPages }) {
     setNumPages(numPages)
@@ -29,12 +99,12 @@ function HomePage () {
     const selectedFile = info.file.originFileObj
     if (selectedFile) {
       if (selectedFile.type === 'application/pdf') {
-        setFile(selectedFile)
+        setFile({ type: 'pdf', file: selectedFile })
         setPageNumber(1)
-        message.success('PDF file uploaded successfully.')
+        //message.success('PDF file uploaded successfully.')
       } else if (selectedFile.type.startsWith('video/')) {
-        setFile(URL.createObjectURL(selectedFile))
-        message.success('Video file uploaded successfully.')
+        setFile({ type: 'video', file: URL.createObjectURL(selectedFile) })
+        //message.success('Video file uploaded successfully.')
       } else {
         message.error('Please upload a valid file.')
       }
@@ -45,79 +115,68 @@ function HomePage () {
     setPageNumber(page)
   }
 
-  const generateQuestions = () => {
-    const data = {
-      document_id: "f2405076-35b5-4ef2-bca2-c5627a5c8d10",
-      status: 200,
-      type: "exercise",
-      message: "success",
-      payload: [
-        {
-          type: "single-choice",
-          question: "丁奎岭是谁？",
-          options: ["一个演员", "一个演员", "一个演员", "一个演员"],
-          answer: "a"
-        },
-        {
-          type: "multiple-choice",
-          question: "丁奎岭是谁？",
-          options: ["一个演员", "一个演员", "一个演员", "一个演员"],
-          answer: "abcd"
-        },
-        {
-          type: "fill-blank",
-          question: ["丁奎岭是", "。"],
-          answer: ["一个演员"]
-        },
-        {
-          type: "long-answer",
-          question: "丁奎岭是谁？",
-          answer: "一个演员"
-        }
-      ]
+  const handleLoadedMetadata = () => {
+    if (videoRef.current) {
+      setVideoDuration(videoRef.current.duration)
+      setRange([0, videoRef.current.duration])
     }
+  }
 
-    setTimeout(() => {
-      setQuestions(data.payload)
-    }, 1000)
+  const openModal = () => {
+    setIsModalVisible(true)
+  }
+
+  const handleOk = () => {
+    const [startTime, endTime] = range
+    if (selectedRightTab === 'questions') {
+      setQuestions(QuestionData.payload)
+    }
+    else {
+      setGraphData(GraphData.payload)
+    }
+    if (startTime >= endTime) {
+      message.error('End time must be greater than start time.')
+      return
+    }
+    setIsModalVisible(false)
+  }
+
+  const handleCancel = () => {
+    setIsModalVisible(false)
+  }
+
+  const onSliderChange = (value) => {
+    setRange(value)
+  }
+
+  const formatTime = (timeInSeconds) => {
+    const minutes = Math.floor(timeInSeconds / 60)
+    const seconds = (timeInSeconds % 60).toFixed(2)
+    return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`
+  }
+
+  const generateQuestions = () => {
+    if (!file) {
+      message.error("Please select a file first")
+      return
+    }
+    if (file.type === 'video') {
+      openModal()
+      return
+    }
+    setQuestions(QuestionData.payload)
   }
 
   const generateGraph = () => {
-    const data = {
-      document_id: "f2405076-35b5-4ef2-bca2-c5627a5c8d10",
-      status: 200,
-      type: "graph",
-      message: "success",
-      payload: {
-        nodes: [
-          {
-            id: "0",
-            label: "丁奎岭",
-            type: "person",
-            connections: ["1", "2"],
-            card: "message from dingkui",
-            detailId: "80313741-3307-4123-ba9c-07897fd7e5fc"
-          },
-          {
-            id: "1",
-            label: "Node 1",
-            type: "person",
-            connections: ["0"],
-            card: "Detail about Node 1",
-            detailId: "node-1-detail-id"
-          },
-          {
-            id: "2",
-            label: "Node 2",
-            type: "person",
-            connections: ["0"],
-            card: "Detail about Node 2",
-            detailId: "node-2-detail-id"
-          }
-        ]
-      }
+    if (!file) {
+      message.error("Please select a file first")
+      return
     }
-    setGraphData(data.payload)
+    if (file.type === 'video') {
+      openModal()
+      return
+    }
+    setGraphData(GraphData.payload)
   }
 
   const renderQuestion = (question, index) => {
@@ -205,11 +264,11 @@ function HomePage () {
             >
               <Button icon={<UploadOutlined />}>Click to Upload PDF</Button>
             </Upload>
-            {file && file.type === 'application/pdf' && (
+            {file && file.type === 'pdf' && (
               <>
                 <div style={{ width: '100%', height: '100vh', overflow: 'auto', border: '1px solid #d9d9d9', padding: '10px', marginTop: "20px" }}>
                   <Document
-                    file={file}
+                    file={file.file}
                     onLoadSuccess={onDocumentLoadSuccess}
                   >
                     <Page pageNumber={pageNumber} scale={1.2} />
@@ -252,10 +311,10 @@ function HomePage () {
             >
               <Button icon={<UploadOutlined />}>Click to Upload Video</Button>
             </Upload>
-            {file && file.type.startsWith('video/') && (
-              <div style={{ marginTop: '20px' }}>
-                <video controls style={{ width: '100%', height: 'auto' }}>
-                  <source src={file} type={file.type} />
+            {file && file.type === 'video' && (
+              <div style={{ width: '100%', height: 'auto', overflow: 'auto', border: '1px solid #d9d9d9', padding: '10px', marginTop: "20px" }}>
+                <video controls style={{ width: '100%' }} ref={videoRef} onLoadedMetadata={handleLoadedMetadata}>
+                  <source src={file.file} type="video/mp4" />
                   Your browser does not support the video tag.
                 </video>
               </div>
@@ -278,7 +337,8 @@ function HomePage () {
               {questions.length > 0 ? (
                 questions.map((question, index) => renderQuestion(question, index))
               ) : (
-                <Paragraph>No questions generated yet.</Paragraph>
+                // <Paragraph>No questions generated yet.</Paragraph>
+                <></>
               )}
             </div>
           </>
@@ -289,11 +349,26 @@ function HomePage () {
               Generate Knowledge Graph
             </Button>
             <div>
-              {graphData ? <KnowledgeGraph graphData={graphData} /> : <Paragraph>No graph data available.</Paragraph>}
+              {graphData ? <KnowledgeGraph graphData={graphData} /> : <></>}
             </div>
           </>
         )}
       </div>
+      <Modal title="Select Video Range" visible={isModalVisible} onOk={handleOk} onCancel={handleCancel}>
+        <Row>
+          <Col span={8}>Start Time: {formatTime(range[0])}</Col>
+          <Col span={8} offset={8}>End Time: {formatTime(range[1])}</Col>
+        </Row>
+        <Slider
+          range
+          step={0.01}
+          min={0}
+          max={videoDuration}
+          value={range}
+          onChange={onSliderChange}
+          tooltip={{ formatter: null }}
+        />
+      </Modal>
     </div>
   )
 }
