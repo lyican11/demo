@@ -1,16 +1,16 @@
 import React, { useState, useRef } from 'react'
 import { Document, Page, pdfjs } from 'react-pdf'
-import { Upload, Button, Pagination, message, Card, Typography, Tabs, Slider, Modal, Row, Col, Select, InputNumber, Progress, Layout, Menu } from 'antd'
+import { Upload, Button, Pagination, message, Tabs, Slider, Modal, Row, Col, Select, InputNumber, Progress, Layout, Menu } from 'antd'
 import { UploadOutlined, LeftOutlined, RightOutlined, VideoCameraOutlined, FilePdfOutlined, AppstoreAddOutlined, MenuFoldOutlined, MenuUnfoldOutlined, FileOutlined } from '@ant-design/icons'
 import 'react-pdf/dist/Page/AnnotationLayer.css'
 import 'react-pdf/dist/Page/TextLayer.css'
 import 'antd/dist/reset.css'
 import KnowledgeGraph from '../component/KnowledgeGraph'
+import QuestionCard from '../component/QuestionCard'
 import { useNavigate } from 'react-router-dom'
 
 pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cat.net/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.mjs`
 
-const { Text, Paragraph } = Typography
 const { TabPane } = Tabs
 const { Option } = Select
 const { Header, Sider, Content } = Layout
@@ -106,6 +106,7 @@ function HomePage () {
   const [selectedQuantity, setSelectedQuantity] = useState(5)
   const [progress, setProgress] = useState(0)
   const [isGenerating, setIsGenerating] = useState(false)
+  const [promptValues, setPromptValues] = useState({})
   const navigate = useNavigate()
   const videoRef = useRef(null)
 
@@ -257,74 +258,6 @@ function HomePage () {
       return
     }
     setGraphData(GraphData.payload)
-  }
-
-  const renderQuestion = (question, index) => {
-    switch (question.type) {
-      case 'single-choice':
-        return (
-          <Card title={`Question ${index + 1} (Single Choice)`} key={index} style={{ marginBottom: "15px" }}>
-            <Paragraph>
-              <Text strong>{question.question}</Text>
-            </Paragraph>
-            {question.options.map((option, idx) => (
-              <Paragraph key={idx}>
-                <Text>{String.fromCharCode(65 + idx)}. {option}</Text>
-              </Paragraph>
-            ))}
-            <Paragraph>
-              <Text type="secondary">Answer: {question.answer.toUpperCase()}</Text>
-            </Paragraph>
-          </Card>
-        )
-      case 'multiple-choice':
-        return (
-          <Card title={`Question ${index + 1} (Multiple Choice)`} key={index} style={{ marginBottom: "15px" }}>
-            <Paragraph>
-              <Text strong>{question.question}</Text>
-            </Paragraph>
-            {question.options.map((option, idx) => (
-              <Paragraph key={idx}>
-                <Text>{String.fromCharCode(65 + idx)}. {option}</Text>
-              </Paragraph>
-            ))}
-            <Paragraph>
-              <Text type="secondary">Answer: {question.answer.toUpperCase()}</Text>
-            </Paragraph>
-          </Card>
-        )
-      case 'fill-blank':
-        return (
-          <Card title={`Question ${index + 1} (Fill in the Blank)`} key={index} style={{ marginBottom: "15px" }}>
-            <Paragraph>
-              {question.question.map((part, idx) => (
-                <Text key={idx}>
-                  {part}
-                  {idx < question.answer.length && (
-                    <Text underline>{'______'}</Text>
-                  )}
-                </Text>
-              ))}
-            </Paragraph>
-            <Paragraph>
-              <Text type="secondary">Answer: {question.answer.join(', ')}</Text>
-            </Paragraph>
-          </Card>
-        )
-      case 'long-answer':
-        return (
-          <Card title={`Question ${index + 1} (Long Answer)`} key={index} style={{ marginBottom: "15px" }}>
-            <Paragraph>
-              <Text strong>{question.question}</Text>
-            </Paragraph>
-            <Paragraph>
-              <Text type="secondary">Answer: {question.answer}</Text>
-            </Paragraph>
-          </Card>
-        )
-      default:
-        return null
-    }
   }
 
   return (
@@ -504,9 +437,16 @@ function HomePage () {
                       )}
                       <div>
                         {questions.length > 0 ? (
-                          questions.map((question, index) => renderQuestion(question, index))
+                          questions.map((question, index) =>
+                          (<QuestionCard
+                            key={index}
+                            question={question}
+                            index={index}
+                            promptValues={promptValues}
+                            setPromptValues={setPromptValues}
+                          />)
+                          )
                         ) : (
-                          // <Paragraph>No questions generated yet.</Paragraph>
                           <></>
                         )}
                       </div>
