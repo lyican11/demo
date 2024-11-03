@@ -107,6 +107,7 @@ function HomePage () {
   const [progress, setProgress] = useState(0)
   const [isGenerating, setIsGenerating] = useState(false)
   const [promptValues, setPromptValues] = useState({})
+  const [loadingStates, setLoadingStates] = useState({})
   const navigate = useNavigate()
   const videoRef = useRef(null)
 
@@ -444,6 +445,8 @@ function HomePage () {
                             index={index}
                             promptValues={promptValues}
                             setPromptValues={setPromptValues}
+                            loadingStates={loadingStates}
+                            setLoadingStates={setLoadingStates}
                           />)
                           )
                         ) : (

@@ -1,12 +1,25 @@
-import { Card, Input, Button, Typography } from 'antd'
+import { Card, Input, Button, Typography, message, Spin } from 'antd'
 
 const { Paragraph, Text } = Typography
 
-function QuestionCard ({ question, index, promptValues, setPromptValues }) {
+function QuestionCard ({ question, index, promptValues, setPromptValues, loadingStates, setLoadingStates }) {
   const handlePromptChange = (e) => {
     const newPromptValues = { ...promptValues, [index]: e.target.value }
     setPromptValues(newPromptValues)
   }
+
+  const handleSend = () => {
+    // 设置当前卡片为加载状态
+    const newLoadingStates = { ...loadingStates, [index]: true }
+    setLoadingStates(newLoadingStates)
+    setTimeout(() => {
+      // 优化完成后恢复加载状态并弹出提示
+      const completedLoadingStates = { ...newLoadingStates, [index]: false }
+      setLoadingStates(completedLoadingStates)
+      message.success(`Question ${index + 1} optimized successfully!`)
+    }, 2000) // 2秒后模拟完成
+  }
+
   switch (question.type) {
     case 'single-choice':
       return (
@@ -38,8 +51,8 @@ function QuestionCard ({ question, index, promptValues, setPromptValues }) {
           >
             快捷输入
           </Button>
-          <Button type="primary">
-            发送
+          <Button type="primary" onClick={handleSend} disabled={loadingStates[index]}>
+            {loadingStates[index] ? <Spin size="small" /> : "发送"}
           </Button>
         </Card>
       )
@@ -57,6 +70,25 @@ function QuestionCard ({ question, index, promptValues, setPromptValues }) {
           <Paragraph>
             <Text type="secondary">Answer: {question.answer.toUpperCase()}</Text>
           </Paragraph>
+          <Input
+            value={promptValues[index] || ''}
+            onChange={handlePromptChange}
+            placeholder="Enter your prompt here..."
+            style={{ marginBottom: '10px' }}
+          />
+          <Button
+            type="default"
+            style={{ marginRight: '10px' }}
+            onClick={() => {
+              const newPromptValues = { ...promptValues, [index]: "sample prompt" }
+              setPromptValues(newPromptValues)
+            }}
+          >
+            快捷输入
+          </Button>
+          <Button type="primary" onClick={handleSend} disabled={loadingStates[index]}>
+            {loadingStates[index] ? <Spin size="small" /> : "发送"}
+          </Button>
         </Card>
       )
     case 'fill-blank':
@@ -75,6 +107,25 @@ function QuestionCard ({ question, index, promptValues, setPromptValues }) {
           <Paragraph>
             <Text type="secondary">Answer: {question.answer.join(', ')}</Text>
           </Paragraph>
+          <Input
+            value={promptValues[index] || ''}
+            onChange={handlePromptChange}
+            placeholder="Enter your prompt here..."
+            style={{ marginBottom: '10px' }}
+          />
+          <Button
+            type="default"
+            style={{ marginRight: '10px' }}
+            onClick={() => {
+              const newPromptValues = { ...promptValues, [index]: "sample prompt" }
+              setPromptValues(newPromptValues)
+            }}
+          >
+            快捷输入
+          </Button>
+          <Button type="primary" onClick={handleSend} disabled={loadingStates[index]}>
+            {loadingStates[index] ? <Spin size="small" /> : "发送"}
+          </Button>
         </Card>
       )
     case 'long-answer':
@@ -86,6 +137,25 @@ function QuestionCard ({ question, index, promptValues, setPromptValues }) {
           <Paragraph>
             <Text type="secondary">Answer: {question.answer}</Text>
           </Paragraph>
+          <Input
+            value={promptValues[index] || ''}
+            onChange={handlePromptChange}
+            placeholder="Enter your prompt here..."
+            style={{ marginBottom: '10px' }}
+          />
+          <Button
+            type="default"
+            style={{ marginRight: '10px' }}
+            onClick={() => {
+              const newPromptValues = { ...promptValues, [index]: "sample prompt" }
+              setPromptValues(newPromptValues)
+            }}
+          >
+            快捷输入
+          </Button>
+          <Button type="primary" onClick={handleSend} disabled={loadingStates[index]}>
+            {loadingStates[index] ? <Spin size="small" /> : "发送"}
+          </Button>
         </Card>
       )
     default:
